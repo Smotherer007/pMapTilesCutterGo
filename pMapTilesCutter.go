@@ -13,8 +13,8 @@ import (
 )
 
 const tileSize int = 256
-const targetPath string = "/Users/patrickweppelmann/Downloads/gomap/"
-const sourcePath string = "/Users/patrickweppelmann/Downloads/map.png"
+const targetPath string = "./"
+const sourcePath string = "./map.png"
 
 func main() {
 
