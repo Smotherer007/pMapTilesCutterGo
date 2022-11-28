@@ -1,4 +1,4 @@
-package pMapTilesCutterGo
+package mapTilesCutter
 
 import (
 	"fmt"
@@ -13,11 +13,9 @@ import (
 	"github.com/disintegration/imaging"
 )
 
-func CutMapIntoTiles(tileSize int, targetPath string, sourcePath string) {
+func CutMapIntoTiles(sourcePath string, targetPath string, tileSize int) {
 	sourceImage, sourceImageWidth, sourceImageHeight := loadImage(sourcePath)
-
 	minZoomLevel, maxZoomLevel, _ := calculateScaleParamters(sourceImage, tileSize)
-
 	currentZoomLevel := minZoomLevel
 	currentScale := maxZoomLevel
 
