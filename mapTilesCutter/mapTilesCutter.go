@@ -8,16 +8,30 @@ import (
 	"log"
 	"math"
 	"os"
+	"strconv"
 	"sync"
 
 	"github.com/disintegration/imaging"
+	"github.com/schollz/progressbar/v3"
 )
+
+var tilesProgressBar = progressbar.Default(100)
+var processedTiles int = 0
+var totalNumberOfTilesToProcess int = 0
 
 func CutMapIntoTiles(sourcePath string, targetPath string, tileSize int) {
 	sourceImage, sourceImageWidth, sourceImageHeight := loadImage(sourcePath)
-	minZoomLevel, maxZoomLevel, _ := calculateScaleParamters(sourceImage, tileSize)
+	minZoomLevel, maxZoomLevel, numberOfTiles := calculateScaleParamters(sourceImage, tileSize)
+	totalNumberOfTilesToProcess = numberOfTiles
 	currentZoomLevel := minZoomLevel
 	currentScale := maxZoomLevel
+
+	fmt.Println("Start generating map tiles")
+	fmt.Println("===================================================")
+	fmt.Println("Minimum zoom level: ", minZoomLevel)
+	fmt.Println("Maximum zoom level: ", maxZoomLevel)
+	fmt.Println("Number of map tile to generate: ", strconv.Itoa(numberOfTiles))
+	fmt.Println("===================================================")
 
 	var tilesWaitGroup sync.WaitGroup
 	for currentZoomLevel <= maxZoomLevel {
@@ -33,6 +47,10 @@ func CutMapIntoTiles(sourcePath string, targetPath string, tileSize int) {
 		currentScale--
 	}
 	tilesWaitGroup.Wait()
+
+	fmt.Println("===================================================")
+	fmt.Println("Finished generating map tiles")
+	fmt.Println("===================================================")
 }
 
 func mergeImageToCanvas(canvas image.Image, canvasWidth int, canvasHeight int, imageToMerge image.Image, imageWidth int, imageHeight int) image.Image {
@@ -59,6 +77,8 @@ func createTiles(tileSize int, targetPath string, mergedImage image.Image, width
 			tile := createTile(mergedImage, tileX, tileY, tileSize)
 			filePath := buildFilePath(targetPath, currentZoomLevel, x, y)
 			saveImage(tile, filePath)
+			processedTiles++
+			tilesProgressBar.Set(processedTiles * 100 / totalNumberOfTilesToProcess)
 		}
 	}
 }
