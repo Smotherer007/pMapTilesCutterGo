@@ -1,4 +1,4 @@
-package main
+package pMapTilesCutterGo
 
 import (
 	"fmt"
@@ -12,11 +12,7 @@ import (
 	"github.com/disintegration/imaging"
 )
 
-const tileSize int = 256
-const targetPath string = "./"
-const sourcePath string = "./map.png"
-
-func main() {
+func CutMapIntoTiles(tileSize int, targetPath string, sourcePath string) {
 
 	sourceImage := loadImage(sourcePath)
 	sourceImageWidth := float64(sourceImage.Bounds().Dx())
@@ -47,14 +43,14 @@ func main() {
 		left := (canvasHeight - imageResizeHeight) / 2
 		mergedImage := imaging.Paste(canvas, resizedImage, image.Pt(int(top), int(left)))
 
-		createTiles(mergedImage, int(canvasWidth), int(canvasHeight), int(zoom))
+		createTiles(tileSize, targetPath, mergedImage, int(canvasWidth), int(canvasHeight), int(zoom))
 
 		zoom++
 		scale--
 	}
 }
 
-func createTiles(mergedImage image.Image, width int, height int, zoom int) {
+func createTiles(tileSize int, targetPath string, mergedImage image.Image, width int, height int, zoom int) {
 	numberOfXTiles := width / tileSize
 	numberOfYTiles := height / tileSize
 
