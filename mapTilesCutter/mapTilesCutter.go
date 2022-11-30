@@ -1,6 +1,7 @@
 package mapTilesCutter
 
 import (
+	"encoding/hex"
 	"fmt"
 	"image"
 	"image/color"
@@ -9,33 +10,40 @@ import (
 	"math"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/disintegration/imaging"
 	"github.com/schollz/progressbar/v3"
 )
 
-var tilesProgressBar = progressbar.Default(100)
-var processedTiles int = 0
-var totalNumberOfTilesToProcess int = 0
+var tilesProgressBar *progressbar.ProgressBar
+var processedTiles int
+var totalNumberOfTilesToProcess int
 
-func CutMapIntoTiles(sourcePath string, targetPath string, tileSize int) {
+func CutMapIntoTiles(sourcePath string, targetPath string, tileSize int, aspectRatioBarsColor string) {
 	sourceImage, sourceImageWidth, sourceImageHeight := loadImage(sourcePath)
 	minZoomLevel, maxZoomLevel, numberOfTiles := calculateScaleParamters(sourceImage, tileSize)
 	totalNumberOfTilesToProcess = numberOfTiles
 	currentZoomLevel := minZoomLevel
 	currentScale := maxZoomLevel
+	color := convertHexToRGBA(aspectRatioBarsColor)
 
 	fmt.Println("Start generating map tiles")
 	fmt.Println("===================================================")
-	fmt.Println("Minimum zoom level: ", minZoomLevel)
-	fmt.Println("Maximum zoom level: ", maxZoomLevel)
-	fmt.Println("Number of map tile to generate: ", strconv.Itoa(numberOfTiles))
+	fmt.Println("Minimum zoom level:", minZoomLevel)
+	fmt.Println("Maximum zoom level:", maxZoomLevel)
+	fmt.Println("Number of map tile to generate:", strconv.Itoa(numberOfTiles))
+	fmt.Println("Color of aspect ratio bars:", aspectRatioBarsColor)
 	fmt.Println("===================================================")
+
+	tilesProgressBar = progressbar.Default(100)
+	processedTiles = 0
+	totalNumberOfTilesToProcess = 0
 
 	var tilesWaitGroup sync.WaitGroup
 	for currentZoomLevel <= maxZoomLevel {
-		canvas, canvasWidth, canvasHeight := createCanvas(currentZoomLevel, tileSize)
+		canvas, canvasWidth, canvasHeight := createCanvas(currentZoomLevel, tileSize, color)
 		resizedImage, resizedImageWidth, resizedImageHeight := resizeImage(sourceImage, sourceImageWidth, sourceImageHeight, currentScale)
 		mergedImage := mergeImageToCanvas(canvas, canvasWidth, canvasHeight, resizedImage, resizedImageWidth, resizedImageHeight)
 		tilesWaitGroup.Add(1)
@@ -109,13 +117,21 @@ func scaleDimension(dimension int, scale int) int {
 	return scaledDimension
 }
 
-func createCanvas(currentZoomLevel int, tileSize int) (image.Image, int, int) {
+func convertHexToRGBA(aspectRatioBarsColor string) color.RGBA {
+	decodedHex, err := hex.DecodeString(strings.ReplaceAll(aspectRatioBarsColor, "#", ""))
+	if err != nil {
+		log.Fatal(err)
+	}
+	return color.RGBA{decodedHex[0], decodedHex[1], decodedHex[2], decodedHex[3]}
+}
+
+func createCanvas(currentZoomLevel int, tileSize int, color color.RGBA) (image.Image, int, int) {
 	width := int(float64(tileSize) * math.Pow(2, float64(currentZoomLevel)))
 	height := int(float64(tileSize) * math.Pow(2, float64(currentZoomLevel)))
 	canvas := image.NewNRGBA(image.Rect(0, 0, width, height))
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
-			canvas.Set(x, y, color.Black)
+			canvas.Set(x, y, color)
 		}
 	}
 	return canvas, width, height
