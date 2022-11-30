@@ -22,9 +22,14 @@ var processedTiles int
 var totalNumberOfTilesToProcess int
 
 func CutMapIntoTiles(sourcePath string, targetPath string, tileSize int, aspectRatioBarsColor string) {
+
+	if _, err := os.Stat(sourcePath); err != nil {
+		log.Fatal(err)
+		return
+	}
+
 	sourceImage, sourceImageWidth, sourceImageHeight := loadImage(sourcePath)
 	minZoomLevel, maxZoomLevel, numberOfTiles := calculateScaleParamters(sourceImage, tileSize)
-	totalNumberOfTilesToProcess = numberOfTiles
 	currentZoomLevel := minZoomLevel
 	currentScale := maxZoomLevel
 	color := convertHexToRGBA(aspectRatioBarsColor)
@@ -39,7 +44,7 @@ func CutMapIntoTiles(sourcePath string, targetPath string, tileSize int, aspectR
 
 	tilesProgressBar = progressbar.Default(100)
 	processedTiles = 0
-	totalNumberOfTilesToProcess = 0
+	totalNumberOfTilesToProcess = numberOfTiles
 
 	var tilesWaitGroup sync.WaitGroup
 	for currentZoomLevel <= maxZoomLevel {
